@@ -1,12 +1,13 @@
 # Scraping of Lithuanian job search websites 
 
-On a EXTRACT SIDE
 The idea is to scrape most popular Lithuanian job search websites using Scrapy / Selenium or Beutiful Soup:
 www.cvbankas.lt
 www.cvmarket.lt
 www.cv.online.lt
 
-## CV Bankas scraping
+##Extract part
+
+### CV Bankas scraping
 Page has a quite simple HTML structure (no JavaScript workarounds), sp I have decided to use Scrapy as the fastest asynchronous engine.
 I have imported Scrapy and creted a spider class with two methods:
 - main, parse divs and extract list of job ads and handles pagination:
@@ -59,7 +60,7 @@ if not response.css('.salary_amount::text').extract():
 ~~~
 * Description field contains raw job description data. Data is does not have specific structure, and vary from add to add, so the idea is to use this column for keyword search feature only.
 
-## CV Market scraping
+### CV Market scraping
 Page has a quite simple HTML structure (no JavaScript workarounds), very similar to cvbankas.lt. I have a strong suspition that it was developed by the same developper.
 The first difference I see is the way of pagination is managed: final number of pages is not indicated on landing page, thus looping with range will not be possible. The other one is that data is nested in table instead of divs (as was in cvbankas.lt). These parts of code need to be adopted.
 
@@ -108,7 +109,7 @@ The first difference I see is the way of pagination is managed: final number of 
 At this point I have noticed that cvmarket publishes over 30 000 job postings, lots of it reposting from other countries. Point to consider if running production version as this many rows takes time to scrape and probably nit much use for end user.
 Next on www.cvonline.lt
 
-## CV Online scraping
+### CV Online scraping
 CV Online in comparisson to other two main job posting sites is heavily JavaScrript loaded, thus Scrapy will encounter issues. I will use Selenium in thi scase. Selenium is slower as it runs synchroniuosly and is driver based, however it can easiry handle popups and JS.
 
 
