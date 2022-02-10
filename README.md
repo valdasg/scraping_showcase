@@ -60,5 +60,7 @@ if not response.css('.salary_amount::text').extract():
 
 ## CV Market scraping
 Page has a quite simple HTML structure (no JavaScript workarounds), very similar to cvbankas.lt. I have a strong suspition that it was developed by the same developper.
+The first difference I see is the way of pagination is managed: final number of pages is not indicated on landing page, thus looping with range will not be possible. This part of code needs to be adopted.
+
 I have imported Scrapy and creted a spider class with two methods:
 - main, parse divs and extract list of job ads
