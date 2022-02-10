@@ -22,10 +22,33 @@ I have imported Scrapy and creted a spider class with two methods:
             yield response.follow(next_page_url, callback=self.parse)
 ~~~
 
-- parse details method to parse details of the job add
+- parse details method to parse details of the job add and to generator for further transformation
+~~~
+    def parse_details(self, response):
+        position = response.css('#jobad_heading1::text').extract()
+        company = response.css('#jobad_company_title::text').extract()
+        payment_way = response.css('.salary_calculation::text').extract()
+        city = response.css("span[itemprop*='addressLocality']::text").extract()[0]
+        if not response.css('.salary_amount::text').extract():
+            salary = ['0']
+        else:
+            salary = response.css('.salary_amount::text').extract()[0]
+        description = response.css('.jobad_txt::text').extract()
+        link = response.request.url
 
-
+        yield {
+            'position': position,
+            'company': company,
+            'city': city,
+            'description': description,
+            'salary': salary,
+            'payment_way': payment_way,
+            'link': link,
+            'source': 'CV Bankas'
+        }
 ~~~
 
-
+Scrapeed data is raw. Many of the inconsistencies, like:
+* Salaries indicated are before/after taxes/no salary indicated
+* Description is scrapeed from one div with no distinct selector, needs to be handled
 
