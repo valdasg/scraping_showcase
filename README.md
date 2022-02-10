@@ -58,7 +58,10 @@ if not response.css('.salary_amount::text').extract():
         else:
             salary = response.css('.salary_amount::text').extract()[0]
 ~~~
-* Description field contains raw job description data. Data is does not have specific structure, and vary from add to add, so the idea is to use this column for keyword search feature only.
+Description field contains raw job description data. Data is does not have specific structure, and vary from add to add, so the idea is to use this column for keyword search feature only. Finally, a result of 9714 records:
+
+![print result](https://github.com/valdasg/scraping_showcase/blob/main/cvbankas.png?raw=true)
+
 
 ### CV Market scraping
 Page has a quite simple HTML structure (no JavaScript workarounds), very similar to cvbankas.lt. I have a strong suspition that it was developed by the same developper.
