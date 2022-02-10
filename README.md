@@ -309,5 +309,5 @@ with Engine(teardown=True) as spider:  # set to true to enable teardown under __
 Final result for CV Online counts to raw 5321 records:
 
 #### Prints out:
-![print result](https://github.com/valdasg/scraping_showcase/blob/master/cvonline.png?raw=true)
+![print result](https://github.com/valdasg/scraping_showcase/blob/main/cvonline.png?raw=true)
 
