@@ -117,6 +117,7 @@ For CV online scraping I have created two classes: Parser (it is responsible for
 ~~~
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import NoSuchElementException
 
 
 class Parser:
@@ -152,10 +153,13 @@ class Parser:
                 By.CLASS_NAME, 'vacancy-item__info-main a'
             ).get_attribute('innerHTML').strip()
 
-            # Salary
-            salary = box.find_element(
-                By.CLASS_NAME, 'vacancy-item__salary-label'
-            ).get_attribute('innerHTML')
+            # Salary, if salary is not indicated, except 0
+            try:
+                salary = box.find_element(
+                    By.CLASS_NAME, 'vacancy-item__salary-label'
+                ).get_attribute('innerHTML')
+            except NoSuchElementException:
+                salary = '0'
 
             # City
             city = box.find_element(
@@ -182,6 +186,7 @@ class Parser:
             jobs.append(details)
 
         return jobs
+
 ~~~
 
 and Engine (responsible for all the site interaction methods):
@@ -230,7 +235,7 @@ class Engine(webdriver.Chrome):
             banner_close.click()
         except NoSuchElementException:
             pass
-    
+
     # Get rid of cookies banner
     def get_rid_of_cookies(self):
         try:
@@ -246,14 +251,14 @@ class Engine(webdriver.Chrome):
             'No cookie banner'
         finally:
             pass
-    
-    # Select job ad search link to show all 
+
+    # Select job ad search link to show all
     def search_ads(self):
         search_ads_button = self.find_element(
             By.CSS_SELECTOR, 'a[data-gtm-id="header-menu-link.job.ad.search"]'
         )
         search_ads_button.click()
-    
+
     # Wait for the page to load and pull results
     def report_results(self=webdriver):
         try:
@@ -266,20 +271,41 @@ class Engine(webdriver.Chrome):
             )
             report = Parser(ad_boxes)
             return report.pull_attributes()
-    
+
     # Go to next page
     def next_page(self):
-        pagination_section = self.find_element(
-            By.CLASS_NAME, 'pagination'
+        next_page = self.find_element(
+            By.CSS_SELECTOR, 'button[aria-label="Next"]'
         )
-        active_page = int(pagination_section.find_element(
-            By.CLASS_NAME, 'pagination__link--active'
-        ).get_attribute('innerText').strip())
-
-        next_page_button = pagination_section.find_elements(
-            By.CSS_SELECTOR, '[type = "button"]'
-        )[active_page + 1].click()
+        if next_page is not None:
+            next_page.click()
+        else:
+            return
         time.sleep(1)
 ~~~
+Spider is started from run.py, lopping through available pages:
+~~~
+from engine import Engine
+from selenium.webdriver.common.by import By
+import json
+
+# Initialise class with 'with' to execute teardown actions as soon as program goes out of indentation.
+# Teardown actions are specified in class as magic __exit__ method.
+with Engine(teardown=True) as spider:  # set to true to enable teardown under __exit__ in class CvOnline
+    spider.land_first_page()
+    spider.get_rid_of_banner()
+    spider.get_rid_of_cookies()
+    spider.search_ads()
+    spider.report_results()
+    result = []
+
+    for _ in range(267):
+        spider.next_page()
+        result += spider.report_results()
+        data = json.dumps(result, indent=4)
+    with open('jobs.json', 'w') as f:
+        f.write(data)
+~~~
+Final result for CV Online counts to 
 
 
