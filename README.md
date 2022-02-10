@@ -111,7 +111,175 @@ Next on www.cvonline.lt
 
 ### CV Online scraping
 CV Online in comparisson to other two main job posting sites is heavily JavaScrript loaded, thus Scrapy will encounter issues. I will use Selenium in thi scase. Selenium is slower as it runs synchroniuosly and is driver based, however it can easiry handle popups and JS.
+Also, CV Online give users much more control over job ad contents (ex. no particular structure, jpegs, pdfs), thus scraping of job description is very complex, I will skip it as empty value.
+
+For CV online scraping I have created two classes: Parser (it is responsible for scraping of a site data and composing it to dictionary):
+~~~
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 
 
+class Parser:
+    def __init__(self, boxes_section_element: WebElement):
+        self.boxes_section_element = boxes_section_element
+        self.ad_boxes = self.pull_all_adds()  # variable, that runs a method pull all ads
+
+    def pull_all_adds(self):
+        return self.boxes_section_element.find_elements(
+            By.CLASS_NAME, 'vacancies-list__item'
+        )
+
+    def pull_attributes(self):
+
+        jobs = []
+        # Payment way
+        payment_way = 'Neatskaičius mokesčių'
+
+        # Source
+        source = 'CVOnline'
+
+        # Description
+        description = ''
+
+        for box in self.ad_boxes:
+            # Position
+            position = box.find_element(
+                By.CLASS_NAME, 'vacancy-item__title'
+            ).get_attribute('innerHTML').strip()
+
+            # Company
+            company = box.find_element(
+                By.CLASS_NAME, 'vacancy-item__info-main a'
+            ).get_attribute('innerHTML').strip()
+
+            # Salary
+            salary = box.find_element(
+                By.CLASS_NAME, 'vacancy-item__salary-label'
+            ).get_attribute('innerHTML')
+
+            # City
+            city = box.find_element(
+                By.CLASS_NAME, 'vacancy-item__locations'
+            ).get_attribute('innerText').replace('\xa0—\xa0', '').strip()
+
+            # Link
+            link = box.find_element(
+                By.CLASS_NAME, 'vacancy-item__content a'
+            ).get_attribute("href")
+
+            # Compose output
+            details = {
+                'position': position,
+                'company': company,
+                'city': city.strip().split(',')[0],
+                'description': description,
+                'salary': salary,
+                'payment_way': payment_way,
+                'link': link,
+                'source': 'CV Online'
+            }
+
+            jobs.append(details)
+
+        return jobs
+~~~
+
+and Engine (responsible for all the site interaction methods):
+
+~~~
+import constants
+from parser import Parser
+import os
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
+import time
+
+
+class Engine(webdriver.Chrome):
+    def __init__(self, driver_path=r";C:\\SeleniumDrivers",
+                 teardown=True):  # teardown is disabled
+        self.driver_path = driver_path
+        self.teardown = teardown
+        os.environ['PATH'] += self.driver_path
+        super(Engine, self).__init__()
+
+        self.implicitly_wait(15)  # Give every method time to execute
+        # self.maximize_window()  # Cleaner look for testing
+
+    # Close windows upon end
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.teardown:
+            self.quit()
+
+    # Land first page
+    def land_first_page(self):
+        self.get(constants.URL)
+
+    # Get rid of pop up banner
+    def get_rid_of_banner(self):
+        try:
+            element = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "modal-wrapper"))
+            )
+            banner_close = self.find_element(
+                By.CLASS_NAME, "close-modal-button__content"
+            )
+            banner_close.click()
+        except NoSuchElementException:
+            pass
+    
+    # Get rid of cookies banner
+    def get_rid_of_cookies(self):
+        try:
+            # Get rid of cookies
+            element = WebDriverWait(self, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "cookie-consent-container"))
+            )
+            cookie_close = self.find_element(
+                By.ID, "rcc-confirm-button"
+            )
+            cookie_close.click()
+        except NoSuchElementException:
+            'No cookie banner'
+        finally:
+            pass
+    
+    # Select job ad search link to show all 
+    def search_ads(self):
+        search_ads_button = self.find_element(
+            By.CSS_SELECTOR, 'a[data-gtm-id="header-menu-link.job.ad.search"]'
+        )
+        search_ads_button.click()
+    
+    # Wait for the page to load and pull results
+    def report_results(self=webdriver):
+        try:
+            element = WebDriverWait(self, 10).until(
+                EC.presence_of_all_elements_located((By.CLASS_NAME, "vacancy-item__content"))
+            )
+        finally:
+            ad_boxes = self.find_element(
+                By.CLASS_NAME, 'search__content'
+            )
+            report = Parser(ad_boxes)
+            return report.pull_attributes()
+    
+    # Go to next page
+    def next_page(self):
+        pagination_section = self.find_element(
+            By.CLASS_NAME, 'pagination'
+        )
+        active_page = int(pagination_section.find_element(
+            By.CLASS_NAME, 'pagination__link--active'
+        ).get_attribute('innerText').strip())
+
+        next_page_button = pagination_section.find_elements(
+            By.CSS_SELECTOR, '[type = "button"]'
+        )[active_page + 1].click()
+        time.sleep(1)
+~~~
 
 
