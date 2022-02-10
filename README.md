@@ -313,4 +313,4 @@ Final result for CV Online counts to raw 5321 records:
 
 ![print result](https://github.com/valdasg/scraping_showcase/blob/main/cvonline.png?raw=true)
 
-Frther - to data transformation --->
+Frther - to data [transformation --->](https://github.com/valdasg/scraping_showcase/blob/main/trans.md)
