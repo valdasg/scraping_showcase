@@ -50,5 +50,15 @@ I have imported Scrapy and creted a spider class with two methods:
 
 Scrapeed data is raw. Many of the inconsistencies, like:
 * Salaries indicated are before/after taxes/no salary indicated
-* Description is scrapeed from one div with no distinct selector, needs to be handled
+* Description is scrapeed from one div with no distinct selector, needs to be handled. At this stage, I just asign zero value to salaries field where spider did not find abny value:
+~~~
+if not response.css('.salary_amount::text').extract():
+            salary = ['0']
+        else:
+            salary = response.css('.salary_amount::text').extract()[0]
+~~~
 
+## CV Market scraping
+Page has a quite simple HTML structure (no JavaScript workarounds), very similar to cvbankas.lt. I have a strong suspition that it was developed by the same developper.
+I have imported Scrapy and creted a spider class with two methods:
+- main, parse divs and extract list of job ads
