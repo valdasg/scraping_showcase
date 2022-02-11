@@ -109,7 +109,10 @@ The first difference I see is the way of pagination is managed: final number of 
             'source': 'CV Market'
         }
 ~~~
-At this point I have noticed that cvmarket publishes over 30 000 job postings, lots of it reposting from other countries. Point to consider if running production version as this many rows takes time to scrape and probably nit much use for end user.
+At this point I have noticed that cvmarket publishes over 30 000 job postings, lots of it reposting from other countries. Point to consider if running production version as this many rows takes time to scrape and probably nit much use for end user. Final result for CV Bankas counts to raw 30569 records:
+
+![print result](https://github.com/valdasg/scraping_showcase/blob/main/cvmarket.png?raw=true)
+
 Next on www.cvonline.lt
 
 ### CV Online scraping
